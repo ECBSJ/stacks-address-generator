@@ -1,5 +1,5 @@
 import "./App.css"
-import Multisig from "./components/multisig"
+import Multisig from "./components/Multisig"
 import Single from "./components/Single"
 import Mnemonic from "./components/Mnemonic"
 import Convert from "./components/Convert"
