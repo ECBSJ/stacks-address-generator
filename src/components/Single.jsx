@@ -1,5 +1,7 @@
 import { bytesToHex, hexToBytes, privateKeyToBytes } from "@stacks/common"
 import {
+  addressFromVersionHash,
+  addressToString,
   getAddressFromPublicKey,
   hash160,
   privateKeyToPublic,
@@ -7,33 +9,51 @@ import {
 } from "@stacks/transactions"
 import { c32ToB58 } from "c32check"
 import pill from "/pill.png"
+import { useState } from "react"
 
 function Single() {
+  const [wallet, setWallet] = useState(null)
+  const [showTestnet, setShowTestnet] = useState(false)
+
   console.log("Single rendered")
 
   function generateSingle() {
     document.getElementById("error").innerText = ""
 
     let randomPrivKey = randomPrivateKey()
+    let pubKey = privateKeyToPublic(randomPrivKey)
+    let pubKeyHash = hash160(hexToBytes(pubKey))
+    let stxAddress = getAddressFromPublicKey(pubKey)
+    let btcAddress = c32ToB58(stxAddress)
+
+    let stxTestnet = addressToString(addressFromVersionHash(26, bytesToHex(pubKeyHash)))
+    let btcTestnet = c32ToB58(stxTestnet)
+
     console.log("Private Key 33byte uint8array: ")
     console.log(hexToBytes(randomPrivKey))
-    document.getElementById("privKey").value = randomPrivKey
 
-    let pubKey = privateKeyToPublic(randomPrivKey)
     console.log("Public Key 33byte uint8array: ")
     console.log(hexToBytes(pubKey))
-    document.getElementById("pubKey").value = pubKey
 
-    let pubKeyHash = hash160(hexToBytes(pubKey))
     console.log("Public Key Hash 20byte uint8array: ")
     console.log(pubKeyHash)
+
+    document.getElementById("privKey").value = randomPrivKey
+    document.getElementById("pubKey").value = pubKey
     document.getElementById("pubKeyHash").value = bytesToHex(pubKeyHash)
-
-    let stxAddress = getAddressFromPublicKey(pubKey)
     document.getElementById("stxAdd").value = stxAddress
-
-    let btcAddress = c32ToB58(stxAddress)
     document.getElementById("btcAdd").value = btcAddress
+    document.getElementById("isCompressed").innerText = "(compressed)"
+
+    setWallet({
+      privateKey: randomPrivKey,
+      publicKey: pubKey,
+      publicKeyHash: bytesToHex(pubKeyHash),
+      stxAddress,
+      btcAddress,
+      stxTestnet,
+      btcTestnet
+    })
   }
 
   function handlePrivKeyUserInput(e) {
@@ -48,28 +68,48 @@ function Single() {
     } else {
       try {
         let userPrivKey = e.target.value.trim()
-        privateKeyToBytes(userPrivKey)
-        console.log("Private Key 33 or 32 byte uint8array: ")
-        console.log(hexToBytes(userPrivKey))
+        let userPrivKey_length = privateKeyToBytes(userPrivKey).length
 
         let pubKey = privateKeyToPublic(userPrivKey)
-        console.log("Public Key 33 or 65 byte uint8array: ")
-        console.log(hexToBytes(pubKey))
-        document.getElementById("pubKey").value = pubKey
-
         let pubKeyHash = hash160(hexToBytes(pubKey))
+        let stxAddress = getAddressFromPublicKey(pubKey)
+        let btcAddress = c32ToB58(stxAddress)
+
+        console.log(`Private Key ${userPrivKey_length} byte uint8array: `)
+        console.log(hexToBytes(userPrivKey))
+
+        console.log(`Public Key ${userPrivKey_length === 33 ? "33" : "65"} byte uint8array: `)
+        console.log(hexToBytes(pubKey))
+
         console.log("Public Key Hash 20byte uint8array: ")
         console.log(pubKeyHash)
+
+        document.getElementById("pubKey").value = pubKey
         document.getElementById("pubKeyHash").value = bytesToHex(pubKeyHash)
-
-        let stxAddress = getAddressFromPublicKey(pubKey)
         document.getElementById("stxAdd").value = stxAddress
-
-        let btcAddress = c32ToB58(stxAddress)
         document.getElementById("btcAdd").value = btcAddress
+        document.getElementById("isCompressed").innerText =
+          userPrivKey_length === 33 ? "(compressed)" : "(uncompressed)"
       } catch (error) {
         console.log(error)
-        document.getElementById("error").innerText = "Invalid private key."
+        document.getElementById("error").innerText =
+          "Invalid private key. Must be 33 or 32 byte hex-encoded string."
+      }
+    }
+  }
+
+  function toggleTestnet(e) {
+    if (!document.getElementById("stxAdd").value == "") {
+      if (showTestnet === false) {
+        document.getElementById("stxAdd").value = wallet.stxTestnet
+        document.getElementById("btcAdd").value = wallet.btcTestnet
+        e.target.innerText = "Mainnet"
+        setShowTestnet(true)
+      } else {
+        document.getElementById("stxAdd").value = wallet.stxAddress
+        document.getElementById("btcAdd").value = wallet.btcAddress
+        e.target.innerText = "Testnet"
+        setShowTestnet(false)
       }
     }
   }
@@ -100,6 +140,7 @@ function Single() {
           Generate your single keypair/address:
           <button onClick={generateSingle}>Generate</button>
         </p>
+
         <p className="tip">
           The uint8array byte format of your keypair is logged to the browser console.
         </p>
@@ -109,7 +150,7 @@ function Single() {
           id="error"
           style={{
             position: "absolute",
-            top: "-30px",
+            top: "-27px",
             left: "160px",
             color: "red",
             fontSize: ".8rem",
@@ -125,7 +166,7 @@ function Single() {
       </div>
       <div className="value-container">
         <span>
-          Public Key <br /> (compressed)
+          Public Key <br /> <span id="isCompressed">(compressed)</span>
         </span>
         <textarea id="pubKey" defaultValue={""} disabled></textarea>
       </div>
@@ -137,7 +178,9 @@ function Single() {
         <textarea id="pubKeyHash" defaultValue={""} disabled></textarea>
       </div>
       <div className="value-container">
-        <span>Stacks Address</span>
+        <span>
+          Stacks Address <br /> <button onClick={e => toggleTestnet(e)}>Testnet</button>
+        </span>
         <textarea id="stxAdd" defaultValue={""} disabled></textarea>
       </div>
       <div className="value-container">

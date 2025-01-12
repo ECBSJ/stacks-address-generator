@@ -5,28 +5,35 @@ function Convert() {
   console.log("Convert rendered")
 
   function convertP2pkh(e) {
-    if (e.target.id === "convertStxAdd") {
-      let stxAdd = e.target.value
-      let btcAdd = c32ToB58(stxAdd)
-      let pubKeyHash = c32addressDecode(stxAdd)[1]
-      document.getElementById("convertPubKeyHash").value = pubKeyHash
-      document.getElementById("convertBtcAdd").value = btcAdd
-    }
+    try {
+      if (e.target.id === "convertStxAdd") {
+        let stxAdd = e.target.value
+        let btcAdd = c32ToB58(stxAdd)
+        let pubKeyHash = c32addressDecode(stxAdd)[1]
+        document.getElementById("convertPubKeyHash").value = pubKeyHash
+        document.getElementById("convertBtcAdd").value = btcAdd
+      }
 
-    if (e.target.id === "convertPubKeyHash") {
-      let pubKeyHash = e.target.value
-      let stxAdd = c32address(22, pubKeyHash)
-      let btcAdd = c32ToB58(stxAdd)
-      document.getElementById("convertStxAdd").value = stxAdd
-      document.getElementById("convertBtcAdd").value = btcAdd
-    }
+      if (e.target.id === "convertPubKeyHash") {
+        let pubKeyHash = e.target.value
+        let stxAdd = c32address(22, pubKeyHash)
+        let btcAdd = c32ToB58(stxAdd)
+        document.getElementById("convertStxAdd").value = stxAdd
+        document.getElementById("convertBtcAdd").value = btcAdd
+      }
 
-    if (e.target.id === "convertBtcAdd") {
-      let btcAdd = e.target.value
-      let stxAdd = b58ToC32(btcAdd)
-      let pubKeyHash = c32addressDecode(stxAdd)[1]
-      document.getElementById("convertStxAdd").value = stxAdd
-      document.getElementById("convertPubKeyHash").value = pubKeyHash
+      if (e.target.id === "convertBtcAdd") {
+        let btcAdd = e.target.value
+        let stxAdd = b58ToC32(btcAdd)
+        let pubKeyHash = c32addressDecode(stxAdd)[1]
+        document.getElementById("convertStxAdd").value = stxAdd
+        document.getElementById("convertPubKeyHash").value = pubKeyHash
+      }
+    } catch (error) {
+      console.log(error)
+      document.getElementById("convertStxAdd").value = ""
+      document.getElementById("convertBtcAdd").value = ""
+      document.getElementById("convertPubKeyHash").value = ""
     }
   }
 

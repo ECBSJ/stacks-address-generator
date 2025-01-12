@@ -37,6 +37,7 @@ function Multisig() {
   function generateMultisig() {
     const array_privateKeys = []
     const array_publicKeys = []
+    const array_signers = []
 
     // Generate keys for n signers
     for (let i = 0; i < n; i++) {
@@ -44,6 +45,14 @@ function Multisig() {
       array_privateKeys.push(privateKey)
       const publicKey = privateKeyToPublic(privateKey)
       array_publicKeys.push(publicKey)
+
+      let signer = {
+        signer: i,
+        privateKey: privateKey,
+        publicKey: publicKey
+      }
+
+      array_signers.push(signer)
     }
 
     // m signers required to sign
@@ -53,12 +62,16 @@ function Multisig() {
       m,
       array_publicKeys.map(createStacksPublicKey)
     )
-    console.log(multisigAddWire)
 
     let multisigAdd = addressToString(multisigAddWire)
 
-    document.getElementById("privKeys").value = array_privateKeys.join(",")
-    document.getElementById("pubKeys").value = array_publicKeys.join(",")
+    console.log("Array of signers' keypairs:")
+    console.log(array_signers)
+    console.log("Multisig AddressWire:")
+    console.log(multisigAddWire)
+
+    document.getElementById("privKeys").value = array_privateKeys.join(",\n")
+    document.getElementById("pubKeys").value = array_publicKeys.join(",\n")
     document.getElementById("multiSigAdd").value = multisigAdd
   }
 
@@ -90,7 +103,7 @@ function Multisig() {
         <div style={{ display: "flex", columnGap: "20px", marginTop: "30px" }}>
           <span style={{ position: "relative" }}>
             <span style={{ position: "absolute", top: "-17px", fontSize: ".8rem" }}>
-              n signers:
+              <strong>N</strong> signers:
             </span>
             <input type="button" onClick={e => updateN(0)} defaultValue={"-"} />
             <input type="text" value={n} readOnly />
@@ -99,7 +112,7 @@ function Multisig() {
 
           <span style={{ position: "relative" }}>
             <span style={{ position: "absolute", top: "-17px", fontSize: ".8rem" }}>
-              m signatures required:
+              <strong>M</strong> signatures required:
             </span>
             <input type="button" onClick={e => updateM(0)} defaultValue={"-"} />
             <input type="text" value={m} readOnly />
@@ -110,9 +123,7 @@ function Multisig() {
           Generate your multisig address (15 signers max limit):{" "}
           <button onClick={generateMultisig}>Generate</button>
         </p>
-        <p className="tip">
-          The AddressWire format of your multisig address logged to the browser console.
-        </p>
+        <p className="tip">The array of signers' keypairs logged to the browser console.</p>
       </article>
       <div className="value-container">
         <span>Private Keys</span>

@@ -3,9 +3,12 @@ import { bytesToHex } from "@stacks/common"
 import { privateKeyToAddress, privateKeyToPublic } from "@stacks/transactions"
 import { generateNewAccount, generateWallet, randomSeedPhrase } from "@stacks/wallet-sdk"
 import { c32ToB58 } from "c32check"
+import { useState } from "react"
 
 function Mnemonic() {
   console.log("Mnemonic rendered")
+
+  const [wallets, setWallets] = useState()
 
   async function generateSeedPhrase() {
     let mnemonic = randomSeedPhrase()
@@ -21,10 +24,12 @@ function Mnemonic() {
 
     let wallets = [wallet]
 
-    for (let index = 0; index < 20; index++) {
+    for (let index = 0; index < 19; index++) {
       let newWallet = generateNewAccount(wallets[index])
       wallets.push(newWallet)
     }
+
+    setWallets(wallets)
 
     let accounts = []
 
@@ -32,15 +37,15 @@ function Mnemonic() {
       let path = `m/44'/5757'/0'/0/${index}`
 
       let stxAddress = privateKeyToAddress(
-        wallets[20].accounts[index].stxPrivateKey,
+        wallets[19].accounts[index].stxPrivateKey,
         "mainnet"
       )
 
       let btcAddress = c32ToB58(stxAddress)
 
-      let pubkey = privateKeyToPublic(wallets[20].accounts[index].stxPrivateKey)
+      let pubkey = privateKeyToPublic(wallets[19].accounts[index].stxPrivateKey)
 
-      let privkey = wallets[20].accounts[index].stxPrivateKey
+      let privkey = wallets[19].accounts[index].stxPrivateKey
 
       accounts.push({
         path,
@@ -63,14 +68,83 @@ function Mnemonic() {
     accounts.forEach(el => {
       let tr = document.createElement("tr")
       let a = document.createElement("td")
-      a.textContent = el.path
       let b = document.createElement("td")
-      b.textContent = el.stxAddress
       let c = document.createElement("td")
-      c.textContent = el.btcAddress
       let d = document.createElement("td")
-      d.textContent = el.pubkey
       let e = document.createElement("td")
+
+      a.textContent = el.path
+      b.textContent = el.stxAddress
+      c.textContent = el.btcAddress
+      d.textContent = el.pubkey
+      e.textContent = el.privkey
+
+      tr.appendChild(a)
+      tr.appendChild(b)
+      tr.appendChild(c)
+      tr.appendChild(d)
+      tr.appendChild(e)
+
+      document.getElementById("tableBody").appendChild(tr)
+    })
+  }
+
+  async function generateMoreAccounts() {
+    let wallets_copy = wallets
+    // console.log(wallets_copy)
+    // console.log(wallets.length)
+
+    let lengthCapture = wallets.length
+
+    for (let index = lengthCapture - 1; index < lengthCapture + 9; index++) {
+      let newWallet = generateNewAccount(wallets_copy[index])
+      wallets_copy.push(newWallet)
+    }
+
+    // console.log(wallets_copy)
+
+    let accounts = []
+
+    for (let index = lengthCapture; index < lengthCapture + 10; index++) {
+      let path = `m/44'/5757'/0'/0/${index}`
+
+      let stxAddress = privateKeyToAddress(
+        wallets_copy.at(-1).accounts[index].stxPrivateKey,
+        "mainnet"
+      )
+
+      let btcAddress = c32ToB58(stxAddress)
+
+      let pubkey = privateKeyToPublic(wallets_copy.at(-1).accounts[index].stxPrivateKey)
+
+      let privkey = wallets_copy.at(-1).accounts[index].stxPrivateKey
+
+      accounts.push({
+        path,
+        stxAddress,
+        btcAddress,
+        pubkey,
+        privkey
+      })
+    }
+
+    console.log("Next 10 more accounts:")
+    console.log(accounts)
+
+    setWallets(wallets_copy)
+
+    accounts.forEach(el => {
+      let tr = document.createElement("tr")
+      let a = document.createElement("td")
+      let b = document.createElement("td")
+      let c = document.createElement("td")
+      let d = document.createElement("td")
+      let e = document.createElement("td")
+
+      a.textContent = el.path
+      b.textContent = el.stxAddress
+      c.textContent = el.btcAddress
+      d.textContent = el.pubkey
       e.textContent = el.privkey
 
       tr.appendChild(a)
@@ -103,7 +177,7 @@ function Mnemonic() {
           Generate your BIP39 24 mnemonic seed phrase:
           <button onClick={generateSeedPhrase}>Generate</button>
         </p>
-        <p className="tip">List of derived addresses are logged to the browser console.</p>
+        <p className="tip">List of derived accounts are logged to the browser console.</p>
       </article>
       <div className="value-container">
         <span>BIP39 Mnemonic</span>
@@ -128,8 +202,8 @@ function Mnemonic() {
             <th>Derivation Path</th>
             <th>STX Address</th>
             <th>BTC Address</th>
-            <th>Public Key</th>
-            <th>Private Key</th>
+            <th>Public Key (compressed)</th>
+            <th>Private Key (33 byte)</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -139,6 +213,7 @@ function Mnemonic() {
           </tr>
         </tfoot>
       </table>
+      <button onClick={generateMoreAccounts}>Show 10 more accounts</button>
     </section>
   )
 }
